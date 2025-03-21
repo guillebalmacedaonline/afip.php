@@ -369,12 +369,23 @@ class AfipWebService
 	public function ExecuteRequest($operation, $params = array())
 	{
 		if (!isset($this->soap_client)) {
-			$this->soap_client = new SoapClient($this->WSDL, array(
-				'soap_version' 	=> $this->soap_version,
-				'location' 		=> $this->URL,
-				'trace' 		=> 1,
-				'exceptions' 	=> 0
-			)); 
+			$options = [
+                'soap_version' 	=> $this->soap_version,
+                'location' 		=> $this->URL,
+                'trace' => 1,
+                'exceptions' => true,
+                'cache_wsdl' => WSDL_CACHE_NONE,
+                'stream_context' => stream_context_create([
+                    'ssl' => [
+                        'ciphers' => 'DEFAULT:@SECLEVEL=1',
+                        'cafile' => '/etc/ssl/certs/ca-certificates.crt',
+                        'verify_peer' => true,
+                        'verify_peer_name' => true,
+                    ]
+                ])
+            ];
+
+			$this->soap_client = new SoapClient($this->WSDL, $options);
 		}
 
 		$results = $this->soap_client->{$operation}($params);
